@@ -1,0 +1,5 @@
+{
+  "/api/v1/products": "http://service-1-product:5002",
+  "/api/v1/auth": "http://auth-service:5001",
+  "/api/v1/orders": "http://service-2-order:5003"
+}

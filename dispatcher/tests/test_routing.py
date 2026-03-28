@@ -59,11 +59,11 @@ def test_404_not_found():
 @respx.mock
 def test_504_gateway_timeout():
     # Simulate a timeout from the downstream service
-    respx.get("http://service-1-product:5002/api/v1/timeout").mock(
+    respx.get("http://service-1-product:5002/api/v1/products/timeout").mock(
         side_effect=httpx.ConnectTimeout("Mocked timeout")
     )
     
-    response = client.get("/api/v1/timeout")
+    response = client.get("/api/v1/products/timeout")
     assert response.status_code == 504
     
     data = response.json()

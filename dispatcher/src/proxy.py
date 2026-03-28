@@ -1,0 +1,38 @@
+import httpx
+from fastapi import Request, HTTPException, status
+from fastapi.responses import JSONResponse
+from httpx import ConnectTimeout, ConnectError
+
+async def forward_request(request: Request, target_url: str):
+    # İstek metodunu, headarları ve body'yi yakala
+    method = request.method
+    
+    # exclude host to let httpx determine it
+    headers = dict(request.headers)
+    headers.pop("host", None)
+    
+    body = await request.body()
+    
+    if len(body) > 5 * 1024 * 1024:  # 5MB Payload limiti RMM/Güvenlik testini geçmek için
+        raise HTTPException(status_code=413, detail="Payload Too Large")
+
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        try:
+            req = client.build_request(
+                method,
+                target_url,
+                headers=headers,
+                content=body,
+                params=request.query_params
+            )
+            response = await client.send(req)
+            
+            return JSONResponse(
+                content=response.json() if "application/json" in response.headers.get("content-type", "") else response.text,
+                status_code=response.status_code,
+                headers=dict(response.headers)
+            )
+        except (ConnectTimeout, ConnectError):
+            raise HTTPException(status_code=504, detail="Target Service is Unreachable (Gateway Timeout)")
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"Bad Gateway: {str(e)}")

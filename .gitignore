@@ -1,0 +1,55 @@
+# ==== Custom Project Ignores ====
+.agents/
+
+# ==== Environment & Secrets ====
+# Kurallarda belirtilen hardcoded yasaklarına uygun olarak gizli .env dosyası
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ==== Microservice & Node.js/Python/Go environments ====
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# ==== Databases & Volumes ====
+# Veritabanı ve NoSQL (Mongo, Redis) ve metrik (Prometheus, Grafana) dizin verileri 
+# (Eğer local klasörlere bind ile deploy edilirse git'e girmemeli)
+mongo_data/
+redis_data/
+prometheus_data/
+grafana_data/
+
+# ==== Logs ====
+*.log
+logs/
+
+# ==== IDE, Editors & OS Files ====
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db

@@ -1,0 +1,132 @@
+version: '3.8'
+
+networks:
+  public_net:
+    driver: bridge
+  private_net:
+    driver: bridge
+
+services:
+  # ==========================================
+  # DISPATCHER (API GATEWAY) & DB
+  # ==========================================
+  db_dispatcher:
+    image: redis:7-alpine
+    container_name: db_dispatcher
+    networks:
+      - private_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  dispatcher:
+    build:
+      context: ./dispatcher
+    container_name: dispatcher
+    ports:
+      - "8080:8080"
+    networks:
+      - public_net
+      - private_net
+    depends_on:
+      db_dispatcher:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=redis://db_dispatcher:6379/0
+
+  # ==========================================
+  # AUTH SERVICE & DB
+  # ==========================================
+  db_auth:
+    image: mongo:7.0
+    container_name: db_auth
+    networks:
+      - private_net
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - auth_data:/data/db
+
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: auth-service
+    expose:
+      - "5001"
+    networks:
+      - private_net
+    depends_on:
+      db_auth:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://db_auth:27017/auth_db
+
+  # ==========================================
+  # PRODUCT SERVICE & DB
+  # ==========================================
+  db_product:
+    image: mongo:7.0
+    container_name: db_product
+    networks:
+      - private_net
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - product_data:/data/db
+
+  service-1-product:
+    build:
+      context: ./service-1-product
+    container_name: service-1-product
+    expose:
+      - "5002"
+    networks:
+      - private_net
+    depends_on:
+      db_product:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://db_product:27017/product_db
+
+  # ==========================================
+  # ORDER SERVICE & DB
+  # ==========================================
+  db_order:
+    image: mongo:7.0
+    container_name: db_order
+    networks:
+      - private_net
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - order_data:/data/db
+
+  service-2-order:
+    build:
+      context: ./service-2-order
+    container_name: service-2-order
+    expose:
+      - "5003"
+    networks:
+      - private_net
+    depends_on:
+      db_order:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://db_order:27017/order_db
+
+volumes:
+  auth_data:
+  product_data:
+  order_data:

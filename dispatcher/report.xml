@@ -1,13 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="6" time="0.813" timestamp="2026-03-28T23:30:59.411683" hostname="D16"><testcase classname="tests.test_routing" name="test_dispatcher_health" time="0.011" /><testcase classname="tests.test_routing" name="test_routing_to_product_service" time="0.217" /><testcase classname="tests.test_routing" name="test_routing_to_auth_service_with_body" time="0.214" /><testcase classname="tests.test_routing" name="test_404_not_found" time="0.006" /><testcase classname="tests.test_routing" name="test_504_gateway_timeout" time="0.008"><failure message="assert 404 == 504&#10; +  where 404 = &lt;Response [404 Not Found]&gt;.status_code">@respx.mock
-    def test_504_gateway_timeout():
-        # Simulate a timeout from the downstream service
-        respx.get("http://service-1-product:5002/api/v1/timeout").mock(
-            side_effect=httpx.ConnectTimeout("Mocked timeout")
-        )
-    
-        response = client.get("/api/v1/timeout")
-&gt;       assert response.status_code == 504
-E       assert 404 == 504
-E        +  where 404 = &lt;Response [404 Not Found]&gt;.status_code
-
-tests\test_routing.py:67: AssertionError</failure></testcase><testcase classname="tests.test_routing" name="test_413_payload_too_large" time="0.012" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="2" failures="0" skipped="0" tests="2" time="1.795" timestamp="2026-03-29T22:14:30.978412" hostname="D16"><testcase classname="" name="tests.test_auth" time="0.000"><error message="collection failure">ImportError while importing test module 'C:\Users\efeka\OneDrive\Masaüstü\YazLab2_P1\dispatcher\tests\test_auth.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_auth.py:3: in &lt;module&gt;
+    import jwt
+E   ModuleNotFoundError: No module named 'jwt'</error></testcase><testcase classname="" name="tests.test_routing" time="0.000"><error message="collection failure">ImportError while importing test module 'C:\Users\efeka\OneDrive\Masaüstü\YazLab2_P1\dispatcher\tests\test_routing.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_routing.py:5: in &lt;module&gt;
+    from src.main import app, route_store
+src\main.py:5: in &lt;module&gt;
+    import jwt
+E   ModuleNotFoundError: No module named 'jwt'</error></testcase></testsuite></testsuites>

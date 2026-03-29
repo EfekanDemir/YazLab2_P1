@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="6" time="2.003" timestamp="2026-03-29T22:28:56.347838" hostname="D16"><testcase classname="tests.test_routing" name="test_dispatcher_health" time="0.031" /><testcase classname="tests.test_routing" name="test_routing_to_product_service" time="0.356" /><testcase classname="tests.test_routing" name="test_routing_to_auth_service_with_body" time="0.350" /><testcase classname="tests.test_routing" name="test_404_not_found" time="0.008" /><testcase classname="tests.test_routing" name="test_504_gateway_timeout" time="0.381" /><testcase classname="tests.test_routing" name="test_413_payload_too_large" time="0.009"><failure message="assert 401 == 413&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code">def test_413_payload_too_large():
+        # Create 6MB string
+        large_body = "x" * (6 * 1024 * 1024)
+        response = client.post(
+            "/api/v1/products",
+            data=large_body,
+            headers={"Content-Type": "text/plain"}
+        )
+&gt;       assert response.status_code == 413
+E       assert 401 == 413
+E        +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code
+
+tests\test_routing.py:97: AssertionError</failure></testcase></testsuite></testsuites>

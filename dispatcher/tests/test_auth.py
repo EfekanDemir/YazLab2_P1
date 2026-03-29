@@ -5,10 +5,21 @@ import httpx
 import respx
 from datetime import datetime, timedelta
 
-from src.main import app
+from unittest.mock import patch
+from src.main import app, route_store
 
 client = TestClient(app)
 SECRET_KEY = "test_secret_for_jwt"
+
+# Mock the redis get_route_config
+def mock_get_route_config(path: str, method: str):
+    if path.startswith("/api/v1/products"):
+        min_role = "customer" if method == "GET" else "admin"
+        return {"min_required_role": min_role, "target_service": "http://service-1-product:5002", "is_active": True, "_calculated_target_url": f"http://service-1-product:5002{path}"}
+    return None
+
+patcher = patch.object(route_store, 'get_route_config', side_effect=mock_get_route_config)
+patcher.start()
 
 # Helper for minting test tokens
 def create_token(user_id: str, role: str, expires_in_minutes: int = 60):

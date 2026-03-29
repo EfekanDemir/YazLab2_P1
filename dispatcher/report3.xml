@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="10" time="7.354" timestamp="2026-03-29T22:30:00.226711" hostname="D16"><testcase classname="tests.test_auth" name="test_401_no_token" time="1.649"><failure message="assert 504 == 401&#10; +  where 504 = &lt;Response [504 Gateway Timeout]&gt;.status_code">def test_401_no_token():
+        # Calling a protected route without Bearer token
+        response = client.get("/api/v1/products")
+&gt;       assert response.status_code == 401
+E       assert 504 == 401
+E        +  where 504 = &lt;Response [504 Gateway Timeout]&gt;.status_code
+
+tests\test_auth.py:35: AssertionError</failure></testcase><testcase classname="tests.test_auth" name="test_401_invalid_token" time="1.317"><failure message="assert 504 == 401&#10; +  where 504 = &lt;Response [504 Gateway Timeout]&gt;.status_code">def test_401_invalid_token():
+        # Expired token
+        expired_token = create_token("user1", "admin", -10)
+        response = client.get(
+            "/api/v1/products",
+            headers={"Authorization": f"Bearer {expired_token}"}
+        )
+&gt;       assert response.status_code == 401
+E       assert 504 == 401
+E        +  where 504 = &lt;Response [504 Gateway Timeout]&gt;.status_code
+
+tests\test_auth.py:46: AssertionError</failure></testcase><testcase classname="tests.test_auth" name="test_403_insufficient_role" time="0.386"><failure message="assert 204 == 403&#10; +  where 204 = &lt;Response [204 No Content]&gt;.status_code">@respx.mock
+    def test_403_insufficient_role():
+        # Mock route to ensure proxy isn't called
+        mock_route = respx.delete("http://service-1-product:5002/api/v1/products/1").mock(
+            return_value=httpx.Response(204)
+        )
+    
+        customer_token = create_token("user_cust", "customer")
+        # Assuming DELETE /api/v1/products requires 'admin' (This will be configured in our mock/redis)
+        response = client.delete(
+            "/api/v1/products/1",
+            headers={"Authorization": f"Bearer {customer_token}"}
+        )
+    
+&gt;       assert response.status_code == 403
+E       assert 204 == 403
+E        +  where 204 = &lt;Response [204 No Content]&gt;.status_code
+
+tests\test_auth.py:70: AssertionError</failure></testcase><testcase classname="tests.test_auth" name="test_success_and_header_enrichment" time="0.357"><failure message="AssertionError: assert None == 'user_admin'&#10; +  where None = &lt;bound method Headers.get of Headers({'host': 'service-1-product:5002', 'accept': '*/*', 'accept-encoding': 'gzip, deflate', 'connection': 'keep-alive', 'user-agent': 'testclient', 'authorization': '[secure]', 'x-user-role': 'anonymous'})&gt;('x-user-id')&#10; +    where &lt;bound method Headers.get of Headers({'host': 'service-1-product:5002', 'accept': '*/*', 'accept-encoding': 'gzip, deflate', 'connection': 'keep-alive', 'user-agent': 'testclient', 'authorization': '[secure]', 'x-user-role': 'anonymous'})&gt; = Headers({'host': 'service-1-product:5002', 'accept': '*/*', 'accept-encoding': 'gzip, deflate', 'connection': 'keep-alive', 'user-agent': 'testclient', 'authorization': '[secure]', 'x-user-role': 'anonymous'}).get&#10; +      where Headers({'host': 'service-1-product:5002', 'accept': '*/*', 'accept-encoding': 'gzip, deflate', 'connection': 'keep-alive', 'user-agent': 'testclient', 'authorization': '[secure]', 'x-user-role': 'anonymous'}) = &lt;Request('DELETE', 'http://service-1-product:5002/api/v1/products/1')&gt;.headers">@respx.mock
+    def test_success_and_header_enrichment():
+        # Mock target
+        mock_route = respx.delete("http://service-1-product:5002/api/v1/products/1").mock(
+            return_value=httpx.Response(204)
+        )
+    
+        admin_token = create_token("user_admin", "admin")
+    
+        response = client.delete(
+            "/api/v1/products/1",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+    
+        # 204 No Content expected per RMM rules for DELETE
+        assert response.status_code == 204
+        assert mock_route.called
+    
+        # Check Enrichment Headers
+        passed_request = mock_route.calls[0].request
+&gt;       assert passed_request.headers.get("x-user-id") == "user_admin"
+E       AssertionError: assert None == 'user_admin'
+E        +  where None = &lt;bound method Headers.get of Headers({'host': 'service-1-product:5002', 'accept': '*/*', 'accept-encoding': 'gzip, deflate', 'connection': 'keep-alive', 'user-agent': 'testclient', 'authorization': '[secure]', 'x-user-role': 'anonymous'})&gt;('x-user-id')
+E        +    where &lt;bound method Headers.get of Headers({'host': 'service-1-product:5002', 'accept': '*/*', 'accept-encoding': 'gzip, deflate', 'connection': 'keep-alive', 'user-agent': 'testclient', 'authorization': '[secure]', 'x-user-role': 'anonymous'})&gt; = Headers({'host': 'service-1-product:5002', 'accept': '*/*', 'accept-encoding': 'gzip, deflate', 'connection': 'keep-alive', 'user-agent': 'testclient', 'authorization': '[secure]', 'x-user-role': 'anonymous'}).get
+E        +      where Headers({'host': 'service-1-product:5002', 'accept': '*/*', 'accept-encoding': 'gzip, deflate', 'connection': 'keep-alive', 'user-agent': 'testclient', 'authorization': '[secure]', 'x-user-role': 'anonymous'}) = &lt;Request('DELETE', 'http://service-1-product:5002/api/v1/products/1')&gt;.headers
+
+tests\test_auth.py:95: AssertionError</failure></testcase><testcase classname="tests.test_routing" name="test_dispatcher_health" time="0.009" /><testcase classname="tests.test_routing" name="test_routing_to_product_service" time="0.731" /><testcase classname="tests.test_routing" name="test_routing_to_auth_service_with_body" time="0.852" /><testcase classname="tests.test_routing" name="test_404_not_found" time="0.013" /><testcase classname="tests.test_routing" name="test_504_gateway_timeout" time="1.210" /><testcase classname="tests.test_routing" name="test_413_payload_too_large" time="0.022" /></testsuite></testsuites>

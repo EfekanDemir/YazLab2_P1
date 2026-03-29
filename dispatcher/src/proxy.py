@@ -3,12 +3,16 @@ from fastapi import Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from httpx import ConnectTimeout, ConnectError
 
-async def forward_request(request: Request, target_url: str):
+async def forward_request(request: Request, target_url: str, override_headers: dict = None):
     # İstek metodunu, headarları ve body'yi yakala
     method = request.method
     
     # exclude host to let httpx determine it
-    headers = dict(request.headers)
+    if override_headers is not None:
+        headers = override_headers
+    else:
+        headers = dict(request.headers)
+        
     headers.pop("host", None)
     
     body = await request.body()

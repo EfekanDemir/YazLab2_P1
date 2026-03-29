@@ -2,9 +2,24 @@ import pytest
 from fastapi.testclient import TestClient
 import respx
 import httpx
-from src.main import app
+from unittest.mock import patch
+from src.main import app, route_store
 
 client = TestClient(app)
+
+# Mock the redis get_route_config
+def mock_get_route_config(path: str, method: str):
+    min_role = "anonymous"
+    if path.startswith("/api/v1/products"):
+        return {"min_required_role": min_role, "target_service": "http://service-1-product:5002", "is_active": True, "_calculated_target_url": f"http://service-1-product:5002{path}"}
+    if path.startswith("/api/v1/auth"):
+        return {"min_required_role": min_role, "target_service": "http://auth-service:5001", "is_active": True, "_calculated_target_url": f"http://auth-service:5001{path}"}
+    if path.startswith("/api/v1/timeout"):
+        return {"min_required_role": min_role, "target_service": "http://service-1-product:5002", "is_active": True, "_calculated_target_url": f"http://service-1-product:5002{path}"}
+    return None
+
+patcher = patch.object(route_store, 'get_route_config', side_effect=mock_get_route_config)
+patcher.start()
 
 def test_dispatcher_health():
     response = client.get("/status")

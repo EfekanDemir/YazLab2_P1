@@ -1,14 +1,13 @@
-FROM python:3.11-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY package*.json ./
 
-RUN apk add --no-cache gcc libffi-dev musl-dev && \
-    pip install --no-cache-dir -r requirements.txt
+RUN npm install --production
 
-COPY src/ ./src/
+COPY . .
 
-ENV PYTHONPATH=/app
+EXPOSE 3000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5001"]
+CMD ["npm", "start"]

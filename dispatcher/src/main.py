@@ -3,15 +3,28 @@ import time
 import logging
 import os
 import jwt
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 from src.repositories import RedisRouteStore
 from src.proxy import forward_request
 
-app = FastAPI(title="Dispatcher API Gateway (Secure)")
+app = FastAPI(title="Dispatcher API Gateway (Secure & Monitored)")
+
+# ----------------- PROMETHEUS METRICS -----------------
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Toplam HTTP istek sayisi",
+    ["method", "endpoint", "status"]
+)
+REQUEST_LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "HTTP isteklerinin tamamlanma suresi (saniye)",
+    ["method", "endpoint"]
+)
 
 # Redis URL and generic JWT Key
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -19,12 +32,20 @@ JWT_SECRET = os.getenv("JWT_SECRET", "test_secret_for_jwt")
 route_store = RedisRouteStore(REDIS_URL)
 
 # ----------------- LOGGING SETUP -----------------
+# Ensure logs directory exists
+os.makedirs("logs", exist_ok=True)
+
 logger = logging.getLogger("dispatcher-logger")
 logger.setLevel(logging.INFO)
 if not logger.handlers:
+    # Console handler
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
+    # File handler for Loki/Promtail to tail
+    fh = logging.FileHandler("logs/dispatcher.log")
+    fh.setLevel(logging.INFO)
     logger.addHandler(ch)
+    logger.addHandler(fh)
 
 # ----------------- STANDART HATA JSON -----------------
 def standard_error_response(message: str, code: int, details: dict = None):
@@ -48,6 +69,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 # ----------------- MIDDLEWARE PIPELINE -----------------
 @app.middleware("http")
 async def chain_of_responsibility_middleware(request: Request, call_next):
+    # Metrics icin endpointi basitlestirelim (eg. /api/v1/products/123 -> /api/v1/products)
+    # Promtail/Metrics icin path cardinality kisitlamasi onemlidir.
+    
+    # Eger metrics istediysek direkt gecir
+    if request.url.path == "/metrics":
+        return await call_next(request)
+        
     request_id = str(uuid.uuid4())
     start_time = time.time()
     user_id = None
@@ -106,7 +134,19 @@ async def chain_of_responsibility_middleware(request: Request, call_next):
         raise
     finally:
         # Structured Logging at Exit
-        duration_ms = int((time.time() - start_time) * 1000)
+        duration_s = time.time() - start_time
+        duration_ms = int(duration_s * 1000)
+        
+        # Metric Cardinality azaltmak icin ana path i yakalayalim (/api/v1/products/1 -> /api/v1/products)
+        metric_path = request.url.path
+        if metric_path.startswith("/api/v1/products"): metric_path = "/api/v1/products"
+        elif metric_path.startswith("/api/v1/orders"): metric_path = "/api/v1/orders"
+        elif metric_path.startswith("/api/v1/auth"): metric_path = "/api/v1/auth"
+        else: metric_path = "other"
+
+        REQUEST_COUNT.labels(method=request.method, endpoint=metric_path, status=status_code).inc()
+        REQUEST_LATENCY.labels(method=request.method, endpoint=metric_path).observe(duration_s)
+
         log_entry = {
             "request_id": request_id,
             "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
@@ -119,10 +159,14 @@ async def chain_of_responsibility_middleware(request: Request, call_next):
         import json
         logger.info(json.dumps(log_entry))
 
-# ----------------- STATUS & CATCH-ALL ROUTE -----------------
+# ----------------- STATUS & METRICS & CATCH-ALL ROUTE -----------------
 @app.get("/status")
 def health_check():
     return {"service": "dispatcher", "status": "I am alive"}
+
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 async def catch_all_proxy(path: str, request: Request):

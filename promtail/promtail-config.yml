@@ -1,0 +1,38 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: dispatcher_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: dispatcher
+          __path__: /var/log/dispatcher/dispatcher.log
+    pipeline_stages:
+      - match:
+          selector: '{job="dispatcher"}'
+          stages:
+            - json:
+                expressions:
+                  request_id: request_id
+                  timestamp: timestamp
+                  auth: auth
+                  user_role: user_role
+                  path: path
+                  duration_ms: duration_ms
+                  status_code: status_code
+            - labels:
+                status_code:
+                user_role:
+                path:
+            - timestamp:
+                source: timestamp
+                format: RFC3339

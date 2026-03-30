@@ -9,3 +9,4 @@ redis==5.0.4
 fakeredis==2.23.0
 python-dotenv==1.0.1
 pyjwt==2.8.0
+prometheus-client==0.20.0

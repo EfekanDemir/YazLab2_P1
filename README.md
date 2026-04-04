@@ -1,0 +1,226 @@
+# Mikroservis Mimarisi ve API Gateway Sistemi
+
+**Proje Ekibi:**  
+- Emirhan Oktay — 231307074  
+- Efekan Demir — 231307054  
+
+**Tarih:** 04.04.2026
+
+---
+
+## 1. Giriş
+Bu projenin temel amacı, modern yazılım mühendisliği yaklaşımlarını kullanarak ölçeklenebilir, bakımı kolay ve modüler bir mimari tasarlamaktır. Geleneksel monolitik yapılar yerine, sistem farklı iş etki alanlarına (kimlik doğrulama, ürün yönetimi, raporlama) göre izole mikroservislere ayrılmıştır. Tüm dış trafik, güvenlik ve yönlendirme işlemlerini tek bir merkezden yürüten API Gateway (Dispatcher) üzerinden yönetilirken bağımsız servisler iç ağda haberleşmektedir.
+
+## 2. Teknik Detaylar
+
+### RESTful Servisler 
+REST (Representational State Transfer), HTTP protokol standartlarını kullanarak istemci ve sunucu arasındaki veri alışverişini sağlayan bir yaklaşımdır. İstemci, bir kaynağa URL'ler üzerinden ulaşır ve çoğunlukla JSON formatında veri döndürülür. Doğası gereği durumsuz (stateless) olup yatay ölçeklenebilirliği destekler.
+
+### Richardson Olgunluk Modeli (RMM) Seviye 2
+RMM, bir sistemin REST mimarisine ne kadar sadık olduğunu ölçer.
+- **Seviye 2**, uygulamanın "veri taşımak" için HTTP'yi kullanmanın ötesine geçmesini ifade eder. Standarda uygun HTTP metodlarını (GET, POST, PUT, DELETE) ve anlamlı HTTP Durum Kodlarını (200 OK, 201 Created, 400 Bad Request, 404 Not Found, 500 Internal Error) kapsar.
+- **Projede Nasıl Uygulandı:** Tüm CRUD operasyonlarında RMM Seviye 2 standartları kullanılmıştır. Endpointler (örn: `POST /login`, `GET /products`) operasyona uygun HTTP metodlarıyla tasarlanmış ve sunucu dönütlerinde operasyon sonuçlarını bildiren doğru HTTP status kodları döndürülmüştür.
+
+### TDD (Test-Driven Development) ve Red-Green-Refactor
+TDD, kod bloklarını yazmadan önce o bloğun sağlayacağı özelliği test eden süreçlerin yazılması disiplinidir. Akış 3 adımdan oluşur:
+1. **Red (Kırmızı):** Özellik veya logic henüz ortada yokken yazılan ve başarısız olan "hata veren" test aşaması.
+2. **Green (Yeşil):** İlgili testi geçecek olan yeterlilikte ve basitlikte "çalışan" kodun yazıldığı aşama.
+3. **Refactor (Yeniden Düzenle):** Çalışan kodun testlerden onay alındıktan sonra daha temiz ve modüler bir forma sokulduğu aşama.
+- **Dispatcher'da Nasıl Uygulandı:** Dispatcher'ın dış trafiği yönlendirmesi, JWT doğrulaması, redis route store süreçleri ve yetkilendirmesi (RBAC) önce mock testler ile kurgulanıp (Red), ardından express katmanında karşılıkları yazılarak (Green) TDD süreçlerine uygun geliştirilmiştir.
+
+### OOP ve Yazılım Prensiplerinin Uygulanması
+- **Sınıf Katmanlı (Layered) Mimari:** İstekler yatay katmanlarda bölüştürülmüştür (Controller -> Service -> Repository).
+- **Soyutlama (Abstract Classes) ve Repository Pattern:** Veritabanına ait direkt sorgular Service katmanından izole edilerek Abstract Repository sınıflarında toplanmıştır (Örn: Veri okuma/yazma tek tipe indirilerek veritabanı esnekliği sağlanmıştır).
+- **Dependency Injection & SOLID:** Sınıflar, bağımlı oldukları modülleri dışarıdan (constructor üzerinden) parametre olarak alır, bu sayede test edilebilirlik artar ve "Single Responsibility" prensibine uygun, yalnızca kendi alanıyla ilgilenen modüller elde edilir.
+
+---
+
+## 3. Sistem Mimari ve Döngü Diyagramları (Mermaid)
+
+### a) Sistem Mimarisi (Flowchart)
+Genel servislerin, API Gateway'in ve diğer bileşenlerin ağ yapısı. Dispatcher hariç iç servisler dış ağa izoledir.
+
+```mermaid
+flowchart TD
+    Client((İstemci)) <-->|HTTP/REST| API_GW[Dispatcher\n(API Gateway/Redis)]
+    Locust((Locust\nYük Testi)) -->|HTTP Trafiği| API_GW
+    
+    subgraph İç Ağ (Network Isolation)
+        API_GW <-->|Internal Key/Header| Auth[Auth Service]
+        API_GW <-->|Internal Key/Header| Product[Product Service]
+        API_GW <-->|Internal Key/Header| Report[Report Service]
+        
+        Auth <--> DB1[(MongoDB: Auth)]
+        Product <--> DB2[(MongoDB: Product)]
+        Report <--> DB3[(MongoDB: Report)]
+        Report -.->|HTTP İstekleri| Product
+        
+        Prometheus[Prometheus] -.->|Metrik Çekme| API_GW
+        Prometheus -.-> Auth
+        Prometheus -.-> Product
+        Prometheus -.-> Report
+        
+        Grafana[Grafana] --> Prometheus
+        Loki[Loki\nLog Yönetimi] -.-> API_GW
+    end
+```
+
+### b) Kullanıcı Login Olup Ürün Listesi Çekme (Sequence Diagram)
+Kullanıcının sisteme girip, dönen JWT token ile ürünleri çekme adımları.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant D as Dispatcher
+    participant A as Auth Service
+    participant P as Product Service
+    
+    U->>D: POST /auth/login (Email, Password)
+    D->>A: POST /login (Internal Auth)
+    A-->>D: 200 OK + JWT Token
+    D-->>U: 200 OK + JWT Token
+    
+    U->>D: GET /api/products (Header: Bearer Token)
+    D->>D: JWT Doğrula & RBAC Kontrolü
+    D->>P: GET /products (Internal Header)
+    P-->>D: 200 OK + Ürün Listesi
+    D-->>U: 200 OK + JSON Ürün Listesi
+```
+
+### c) Report Oluşturma (Sequence Diagram)
+Report Service'in map-reduce formatında rapor üretmek için Product Service'den veri okuma akışı.
+
+```mermaid
+sequenceDiagram
+    participant D as Dispatcher
+    participant R as Report Service
+    participant P as Product Service
+    participant DB as Report MongoDB
+    
+    D->>R: POST /reports/generate (Yönetici)
+    R->>R: Rapor Sürecini Başlat
+    R->>P: GET /products (Tüm Ürünler)
+    P-->>R: 200 OK (Ürün Datası)
+    
+    R->>R: Map-Reduce İşlemi (Gruplandırma/Hesaplama)
+    R->>DB: Rapor Sonuçlarını Kaydet
+    DB-->>R: Insert Başarılı
+    R-->>D: 201 Created + Rapor Datası
+```
+
+### d) Auth Service Sınıf Diyagramı (Class Diagram)
+Auth Service'in Controller-Service-Repository katman yapısı.
+
+```mermaid
+classDiagram
+    class AuthController {
+        -AuthService authService
+        +register(req, res)
+        +login(req, res)
+        +logout(req, res)
+    }
+    class AuthService {
+        -AuthRepository authRepository
+        +registerUser(data)
+        +loginUser(credentials)
+        +verifyToken()
+    }
+    class AuthRepository {
+        -mongooseModel User
+        +findByEmail(email)
+        +create(data)
+    }
+    
+    AuthController --> AuthService : uses
+    AuthService --> AuthRepository : uses
+```
+
+### e) Product Service Sınıf Diyagramı (Class Diagram)
+Oluşturulan sınıf yapıları ve Abstract implementasyonu.
+
+```mermaid
+classDiagram
+    class ProductController {
+        -ProductService productService
+        +getAll(req, res)
+        +create(req, res)
+        +update(req, res)
+        +delete(req, res)
+    }
+    class ProductService {
+        -ProductRepository productRepository
+        +getAllProducts()
+        +createProduct(data)
+        +updateProduct(id, data)
+        +deleteProduct(id)
+    }
+    class AbstractRepository {
+        <<abstract>>
+        +find()
+        +findById()
+        +create()
+        +update()
+        +delete()
+    }
+    class MongoProductRepository {
+        -ProductModel model
+        +find()
+        +create()
+        +update()
+        +delete()
+    }
+    
+    AbstractRepository <|-- MongoProductRepository : extends
+    ProductController --> ProductService : uses
+    ProductService --> MongoProductRepository : uses
+```
+
+### f) TDD Red-Green-Refactor Akış Diyagramı
+
+```mermaid
+flowchart LR
+    A((Start)) --> Red[1. Red (Kırmızı)\nBaşarısız Test Yaz]
+    Red --> Green[2. Green (Yeşil)\nTesti Geçecek Basit Kodu Yaz]
+    Green --> Refactor[3. Refactor (Yeniden Düzenle)\nKodu İyileştir ve Optimize Et]
+    Refactor -->|Tüm Testler Passed| Red
+    
+    style Red fill:#ff9999,stroke:#cc0000,stroke-width:2px;
+    style Green fill:#99cc99,stroke:#006600,stroke-width:2px;
+    style Refactor fill:#99ccff,stroke:#0000cc,stroke-width:2px;
+```
+
+---
+
+## 4. Ekran Görüntüleri 
+
+> Lütfen ekran görüntülerini eklemek için placeholder `(src="")` kısımlarına görsel yollarını giriniz.
+
+- **Sistemlerin Docker-Compose ile Ayağa Kalkması:**  
+  ![Docker-Compose Up](PLACEHOLDER-1)
+
+- **Postman/Insomnia Üzerinden Yapılan Api İstekleri (Login/List):**  
+  ![Postman İstekleri](PLACEHOLDER-2)
+
+- **Locust ile Yapılan Yük Testi İzleme Ekranı:**  
+  ![Locust Yük Testi](PLACEHOLDER-3)
+
+- **Grafana Dashboard ve Metrik İzleme Bölümü:**  
+  ![Grafana Dashboard](PLACEHOLDER-4)
+
+---
+
+## 5. Sonuç ve Tartışma
+
+**Başarılar:**
+- Monolitik bir yapı yerine ayrık ve izole edilmiş mikroservis mimarisi başarılı bir şekilde inşa edildi.
+- TDD pratikleri, Dispatcher gibi güvenlik ve yönlendirme açısından kritik bir yapıda hataları erken tespit etmeyi sağlayıp kaliteyi artırdı.
+- OOP, Sınıf Katmanlama ve Repository Pattern ile sistem oldukça esnek, modüler ve değişikliklere dirençli bir hale (SOLID prensiplerine uygun) getirildi.
+- Sistem monitoring araçları sayesinde (Prometheus, Grafana, Loki) ölçeklenme durumu tespit edilebilir bir seviyeye kavuştu.
+
+**Sınırlılıklar:**
+- Birden fazla izolasyonlu veritabanının (MongoDB) çalıştırılması projenin operasyonel karmaşıklığını ve bellek/işlemci tüketimini artırdı.
+- İsteklerin HTTP protokolüne dayalı senkron süreçlere dönüştürülmesi nedeniyle yoğun trafiğe anlık cevap sürelerinde tolerans düşebilmektedir.
+
+**Olası Geliştirmeler:**
+- Report ile Product modülleri arasındaki haberleşmeyi asenkron bir mesaj kuyruğuna (Örn. RabbitMQ, Kafka) taşıyarak, bloklama olmadan daha etkili rapor üretim süreçleri oluşturulabilir.
+- CI/CD metotları ve GitHub Actions entegrasyonu kullanılarak deployment ve test süreçleri otomasyon haline getirilebilir.

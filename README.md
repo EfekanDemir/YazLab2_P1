@@ -42,26 +42,26 @@ Genel servislerin, API Gateway'in ve diğer bileşenlerin ağ yapısı. Dispatch
 
 ```mermaid
 flowchart TD
-    Client((İstemci)) <-->|HTTP/REST| API_GW[Dispatcher\n(API Gateway/Redis)]
-    Locust((Locust\nYük Testi)) -->|HTTP Trafiği| API_GW
+    Client((İstemci)) <-->|HTTP/REST| API_GW[Dispatcher API Gateway]
+    Locust((Locust Yük Testi)) -->|HTTP Trafiği| API_GW
     
-    subgraph İç Ağ (Network Isolation)
-        API_GW <-->|Internal Key/Header| Auth[Auth Service]
-        API_GW <-->|Internal Key/Header| Product[Product Service]
-        API_GW <-->|Internal Key/Header| Report[Report Service]
+    subgraph IcAg [İç Ağ - Network Isolation]
+        API_GW <-->|Internal Header| Auth[Auth Service]
+        API_GW <-->|Internal Header| Product[Product Service]
+        API_GW <-->|Internal Header| Report[Report Service]
         
         Auth <--> DB1[(MongoDB: Auth)]
         Product <--> DB2[(MongoDB: Product)]
         Report <--> DB3[(MongoDB: Report)]
-        Report -.->|HTTP İstekleri| Product
+        Report -.->|HTTP| Product
         
-        Prometheus[Prometheus] -.->|Metrik Çekme| API_GW
+        Prometheus[Prometheus] -.->|Metrik| API_GW
         Prometheus -.-> Auth
         Prometheus -.-> Product
         Prometheus -.-> Report
         
         Grafana[Grafana] --> Prometheus
-        Loki[Loki\nLog Yönetimi] -.-> API_GW
+        Loki[Loki Log] -.-> API_GW
     end
 ```
 
@@ -179,14 +179,14 @@ classDiagram
 
 ```mermaid
 flowchart LR
-    A((Start)) --> Red[1. Red (Kırmızı)\nBaşarısız Test Yaz]
-    Red --> Green[2. Green (Yeşil)\nTesti Geçecek Basit Kodu Yaz]
-    Green --> Refactor[3. Refactor (Yeniden Düzenle)\nKodu İyileştir ve Optimize Et]
-    Refactor -->|Tüm Testler Passed| Red
-    
-    style Red fill:#ff9999,stroke:#cc0000,stroke-width:2px;
-    style Green fill:#99cc99,stroke:#006600,stroke-width:2px;
-    style Refactor fill:#99ccff,stroke:#0000cc,stroke-width:2px;
+    A((Start)) --> Red
+    Red[1. Red - Başarısız Test Yaz] --> Green
+    Green[2. Green - Testi Geçecek Kodu Yaz] --> Refactor
+    Refactor[3. Refactor - Kodu İyileştir] -->|Tüm Testler Passed| Red
+
+    style Red fill:#ff9999,stroke:#cc0000,stroke-width:2px
+    style Green fill:#99cc99,stroke:#006600,stroke-width:2px
+    style Refactor fill:#99ccff,stroke:#0000cc,stroke-width:2px
 ```
 
 ---

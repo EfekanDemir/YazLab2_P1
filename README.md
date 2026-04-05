@@ -260,17 +260,17 @@ erDiagram
   
   ![Locust Yük Testi - 200 User](docs/locust-200-users.jpeg)
   
-  ![Locust Özeti](docs/locust-test.png)
+  ![Locust Yük Testi - 500 User](docs/locust-test.png)
   
   **Yük Testi Performans Dağılım Tablosu (Sayısal Sonuçlar):**
   Locust veya JMeter ile oluşturulan eşzamanlı/paralel yüklenme anında elde edilen ortalama başarı ve yanıt süreleri:
 
   | Eşzamanlı Kullanıcı (CCU) | İstek / Saniye (RPS) | Ortalama Yanıt (ms) | Maks Yanıt (ms) | Hata Oranı (%) |
-  |---------------------------|----------------------|---------------------|-----------------|----------------|
-  | 50 Kullanıcı               | ~340                | 12 ms              | 45 ms          | %0             |
-  | 100 Kullanıcı              | ~650                | 28 ms              | 85 ms          | %0             |
-  | 200 Kullanıcı              | ~1150               | 85 ms              | 190 ms         | %0.1           |
-  | 500 Kullanıcı              | ~2400               | 340 ms             | 850 ms         | %1.2 (Timeout) |
+  | ------------------------- | -------------------- | ------------------- | --------------- | -------------- |
+  | 50 Kullanıcı              | ~340                 | 12 ms               | 45 ms           | %0             |
+  | 100 Kullanıcı             | ~650                 | 28 ms               | 85 ms           | %0             |
+  | 200 Kullanıcı             | ~1150                | 85 ms               | 190 ms          | %0.1           |
+  | 500 Kullanıcı             | ~2400                | 340 ms              | 850 ms          | %1.2 (Timeout) |
 
 - **Grafana Dashboard ve Metrik İzleme Bölümü:**  
   ![Grafana Dashboard](docs/grafana-dashboard.png)

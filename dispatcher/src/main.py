@@ -180,6 +180,7 @@ async def catch_all_proxy(path: str, request: Request):
     
     # Enrichment - Başlıkları klonlayıp ekleyelim
     enriched_headers = dict(request.headers)
+    enriched_headers["x-internal-request"] = "true"
     if hasattr(request, "state"):
         if getattr(request.state, "user_id", None):
              enriched_headers["X-User-Id"] = request.state.user_id

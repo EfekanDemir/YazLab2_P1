@@ -66,7 +66,8 @@ services:
       db_auth:
         condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://db_auth:27017/auth_db
+      - PORT=5001
+      - MONGODB_URI=mongodb://db_auth:27017/auth_db
 
   # ==========================================
   # PRODUCT SERVICE & DB
@@ -96,7 +97,8 @@ services:
       db_product:
         condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://db_product:27017/product_db
+      - PORT=5002
+      - MONGODB_URI=mongodb://db_product:27017/product_db
 
   # ==========================================
   # REPORT SERVICE & DB
@@ -126,7 +128,8 @@ services:
       db_report:
         condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://db_report:27017/report_db
+      - PORT=5003
+      - MONGODB_URI=mongodb://db_report:27017/report_db
 
 # ==========================================
   # OBSERVABILITY STACK (Phase 4)

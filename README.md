@@ -26,7 +26,7 @@ TDD, kod bloklarını yazmadan önce o bloğun sağlayacağı özelliği test ed
 1. **Red (Kırmızı):** Özellik veya logic henüz ortada yokken yazılan ve başarısız olan "hata veren" test aşaması.
 2. **Green (Yeşil):** İlgili testi geçecek olan yeterlilikte ve basitlikte "çalışan" kodun yazıldığı aşama.
 3. **Refactor (Yeniden Düzenle):** Çalışan kodun testlerden onay alındıktan sonra daha temiz ve modüler bir forma sokulduğu aşama.
-- **Dispatcher'da Nasıl Uygulandı:** Dispatcher'ın dış trafiği yönlendirmesi, JWT doğrulaması, redis route store süreçleri ve yetkilendirmesi (RBAC) önce mock testler ile kurgulanıp (Red), ardından express katmanında karşılıkları yazılarak (Green) TDD süreçlerine uygun geliştirilmiştir.
+- **Dispatcher'da Nasıl Uygulandı:** Dispatcher'ın dış trafiği yönlendirmesi, JWT doğrulaması, redis route store süreçleri ve yetkilendirmesi (RBAC) önce mock testler (Pytest) ile kurgulanıp (Red), ardından FastAPI katmanında karşılıkları yazılarak (Green) TDD süreçlerine uygun geliştirilmiştir.
 
 ### OOP ve Yazılım Prensiplerinin Uygulanması
 - **Sınıf Katmanlı (Layered) Mimari:** İstekler yatay katmanlarda bölüştürülmüştür (Controller -> Service -> Repository).

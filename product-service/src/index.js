@@ -16,7 +16,7 @@ app.use(cors());
 // Gateway calls to http://product-service:3000/products will be mapped here.
 // You could also mount it at '/products', depending on how gateway strips prefixes.
 // Assuming dispatcher proxies /products directly.
-app.use('/products', productRoutes);
+app.use('/api/v1/products', productRoutes);
 
 // Health check endpoint (for docker-compose / orchestration)
 app.get('/health', (req, res) => {

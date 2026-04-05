@@ -31,10 +31,16 @@ async def forward_request(request: Request, target_url: str, override_headers: d
             )
             response = await client.send(req)
             
+            # Filter out headers that JSONResponse will set automatically
+            # This prevents "End of response with X bytes missing" errors in curl
+            res_headers = dict(response.headers)
+            res_headers.pop("content-length", None)
+            res_headers.pop("content-type", None)
+
             return JSONResponse(
                 content=response.json() if "application/json" in response.headers.get("content-type", "") else response.text,
                 status_code=response.status_code,
-                headers=dict(response.headers)
+                headers=res_headers
             )
         except (ConnectTimeout, ConnectError):
             raise HTTPException(status_code=504, detail="Target Service is Unreachable (Gateway Timeout)")

@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cors());
 
 // Routes
-app.use('/reports', reportRoutes);
+app.use('/api/v1/reports', reportRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

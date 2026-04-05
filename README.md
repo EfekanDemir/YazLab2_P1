@@ -260,17 +260,17 @@ erDiagram
   
   ![Locust Yük Testi - 200 User](docs/locust-200-users.jpeg)
   
-  ![Locust Yük Testi - 500 User](docs/locust-test.png)
+  ![Locust Yük Testi - 500 User](docs/locust%20500%20users.png)
   
   **Yük Testi Performans Dağılım Tablosu (Sayısal Sonuçlar):**
   Locust veya JMeter ile oluşturulan eşzamanlı/paralel yüklenme anında elde edilen ortalama başarı ve yanıt süreleri:
 
-  | Eşzamanlı Kullanıcı (CCU) | İstek / Saniye (RPS) | Ortalama Yanıt (ms) | Maks Yanıt (ms) | Hata Oranı (%) |
-  | ------------------------- | -------------------- | ------------------- | --------------- | -------------- |
-  | 50 Kullanıcı              | ~340                 | 12 ms               | 45 ms           | %0             |
-  | 100 Kullanıcı             | ~650                 | 28 ms               | 85 ms           | %0             |
-  | 200 Kullanıcı             | ~1150                | 85 ms               | 190 ms          | %0.1           |
-  | 500 Kullanıcı             | ~2400                | 340 ms              | 850 ms          | %1.2 (Timeout) |
+  | Kullanıcı (Kapasite) | Ortalama Yanıt Süresi | Hata Oranı (%) |
+  |----------------------|-----------------------|----------------|
+  | 50                   | 233 ms                | %0             |
+  | 100                  | 974 ms                | %1             |
+  | 200                  | 2246 ms               | %31            |
+  | 500                  | 5484 ms               | %100           |
 
 - **Grafana Dashboard ve Metrik İzleme Bölümü:**  
   ![Grafana Dashboard](docs/grafana-dashboard.png)
@@ -287,7 +287,7 @@ erDiagram
 
 **Sınırlılıklar:**
 - Birden fazla izolasyonlu veritabanının (MongoDB) çalıştırılması projenin operasyonel karmaşıklığını ve bellek/işlemci tüketimini artırdı.
-- İsteklerin HTTP protokolüne dayalı senkron süreçlere dönüştürülmesi nedeniyle yoğun trafiğe anlık cevap sürelerinde tolerans düşebilmektedir.
+- İsteklerin HTTP protokolüne dayalı senkron süreçlere dönüştürülmesi nedeniyle yoğun trafiğe anlık cevap sürelerinde tolerans düşebilmektedir. Sistem özellikle **500 eşzamanlı kullanıcı yükünde tıkanarak %100 hata oranına ulaşmıştır**. Sistemin bu eşikte zorlanıp tepkisizleşmesi mevcut host kaynakları ve Node senkronizasyonu bağlamında tahmin edilen sınır noktasıdır (beklenen bir darboğazdır).
 
 **Olası Geliştirmeler:**
 - Report ile Product modülleri arasındaki haberleşmeyi asenkron bir mesaj kuyruğuna (Örn. RabbitMQ, Kafka) taşıyarak, bloklama olmadan daha etkili rapor üretim süreçleri oluşturulabilir.

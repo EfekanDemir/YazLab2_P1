@@ -243,12 +243,24 @@ erDiagram
 - **Sistemlerin Docker-Compose ile Ayağa Kalkması ve Network İzolasyonu:**  
   *İç ağ izolasyonu (Network Isolation), `docker-compose.yml` yapılandırmasında mikroservislerin (Auth, Product vb.) portlarının dışarıya expose edilmeyip (`networks: private_net`) sadece `Dispatcher` uygulamasının (port 8080) dışarıya/host cihazına açılmasıyla sağlanmıştır. İstemciden gönderilen tüm istekler yalnızca Dispatcher'a düşmektedir.*  
   ![Docker-Compose Up](docs/docker-compose-up.png)
+  
+  ![Network İzolasyonu Kanıtı](docs/network-isolation.png.jpeg)
 
-- **Terminal (cURL) Üzerinden Yapılan API İstekleri (Success ve Not Found Örnekleri):**  
+- **Terminal (cURL) Üzerinden Yapılan API İstekleri (Success ve Not Found Örnekleri) ve Flow:**  
   ![cURL İstekleri](docs/curl-requests.png)
+  
+  ![API İstek Akışı](docs/api%20test%20flow.jpeg)
 
 - **Locust ile Yapılan Yük Testi ve Performans İzleme Özeti:**  
-  ![Locust Yük Testi](docs/locust-test.png)
+  Yük testleri aşamalı olarak 50, 100 ve 200 kullanıcıyla gerçekleştirilmiştir:
+  
+  ![Locust Yük Testi - 50 User](docs/locust%2050%20users.jpeg)
+  
+  ![Locust Yük Testi - 100 User](docs/locust%20100%20users.jpeg)
+  
+  ![Locust Yük Testi - 200 User](docs/locust-200-users.jpeg)
+  
+  ![Locust Özeti](docs/locust-test.png)
   
   **Yük Testi Performans Dağılım Tablosu (Sayısal Sonuçlar):**
   Locust veya JMeter ile oluşturulan eşzamanlı/paralel yüklenme anında elde edilen ortalama başarı ve yanıt süreleri:

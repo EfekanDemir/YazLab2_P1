@@ -186,6 +186,20 @@ services:
     depends_on:
       - loki
 
+  locust:
+    image: locustio/locust
+    container_name: locust
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./locustfile.py:/mnt/locust/locustfile.py
+    command: -f /mnt/locust/locustfile.py --host http://dispatcher:8080
+    networks:
+      - public_net
+      - private_net
+    depends_on:
+      - dispatcher
+
 volumes:
   auth_data:
   product_data:

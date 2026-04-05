@@ -48,6 +48,13 @@ routes = [
         "min_required_role": "customer",
         "target_service": "http://report-service:5003",
         "is_active": True
+    },
+    {
+        "route": "/api/v1/reports/generate",
+        "method": "POST",
+        "min_required_role": "admin",
+        "target_service": "http://report-service:5003",
+        "is_active": True
     }
 ]
 

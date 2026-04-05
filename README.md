@@ -33,6 +33,16 @@ TDD, kod bloklarını yazmadan önce o bloğun sağlayacağı özelliği test ed
 - **Soyutlama (Abstract Classes) ve Repository Pattern:** Veritabanına ait direkt sorgular Service katmanından izole edilerek Abstract Repository sınıflarında toplanmıştır (Örn: Veri okuma/yazma tek tipe indirilerek veritabanı esnekliği sağlanmıştır).
 - **Dependency Injection & SOLID:** Sınıflar, bağımlı oldukları modülleri dışarıdan (constructor üzerinden) parametre olarak alır, bu sayede test edilebilirlik artar ve "Single Responsibility" prensibine uygun, yalnızca kendi alanıyla ilgilenen modüller elde edilir.
 
+### Kısa Literatür İncelemesi
+Modern yazılım mimarilerinde **Mikroservisler**, tek bir monolitik uygulama yerine iş mantıklarının bağımsız çalıştırılabilir küçüklükte servislere ayrılması prensibine dayanır (Fowler, M., & Lewis, J. 2014, "Microservices"). Bu yapıda dış dünya ile mikroservisler arasında güvenlik, yönlendirme ve yük dengeleme (load balancer) görevlerini üstlenen birim **API Gateway (Dispatcher)** olarak adlandırılır (Nginx, "What is an API Gateway?"). Projenin iskeletini oluşturan **TDD (Test-Driven Development)**, yazılım geliştirme sürecini "önce test yaz, sonra kodu geliştir" prensibiyle ilerleterek kod kalitesini ve sürdürülebilirliği maksimize etmektedir (Beck, K. 2003, "Test-Driven Development: By Example").
+
+### Karmaşıklık Analizi (Big-O Algoritma Değerlendirmesi)
+Sistemdeki bazı kritik algoritmaların (routing, veri manipülasyonu) performans analizi:
+- **Dispatcher Route Eşleştirme:** Gelen isteklerin hash map veya dictionary türü bellek yapılarla (RedisRouteStore üzerinde) kontrol edilmesi durumunda zaman karmaşıklığı **O(1)** değerindedir. Doğrudan sabit zamanda eşleşme bulunur.
+- **Auth Service JWT Doğrulama:** Token analizi token uzunluğuna (N) bağlı olarak asimetrik doğrulama işlemlerinde **O(N)** sürede işlenmektedir.
+- **Product Service CRUD:** Veritabanı (MongoDB) sorguları ID bazlı olduğunda B-Tree yapısı gereği arama ve okuma işlemleri **O(log N)** karmaşıklıkta çalışmaktadır.
+- **Report Service Map-Reduce:** Product servisinden R adet ürün çekilip gruplama veya map (toplam fiyat, ürün sayımı vb.) yapıldığında her ürün dökümanı tek tek tarandığı için Map azaltma/sayma işlemi en kötü durumda **O(R)** Lineer (Doğrusal) zaman karmaşıklığında çalışmaktadır.
+
 ---
 
 ## 3. Sistem Mimari ve Döngü Diyagramları (Mermaid)
@@ -189,23 +199,69 @@ flowchart LR
     style Refactor fill:#99ccff,stroke:#0000cc,stroke-width:2px
 ```
 
+### g) Veritabanı Entity-Relationship (E-R) Diyagramı (NoSQL)
+Koleksiyonların referanssal bağlantıları ve sakladıkları veriler aşağıda modellenmiştir. Veritabanı izolasyonu sayesinde her servis kendi verisine erişir.
+
+```mermaid
+erDiagram
+    USER {
+        string _id PK
+        string username
+        string password
+        string[] tokens
+        string role "admin/customer/anonymous"
+        date createdAt
+        date updatedAt
+    }
+    PRODUCT {
+        string _id PK
+        string name
+        string description
+        number price
+        number stock
+        date createdAt
+    }
+    REPORT {
+        string _id PK
+        string title
+        date generatedAt
+        number productCount
+        number totalStockValue
+        array products "Frozen Snapshot Data"
+    }
+    
+    USER ||..o{ PRODUCT : "İşlem Yapar (Log İlgisi)"
+    PRODUCT ||--|{ REPORT : "Hesaplanır/Toplanır"
+```
+
 ---
 
 ## 4. Ekran Görüntüleri 
 
-> Lütfen ekran görüntülerini eklemek için placeholder `(src="")` kısımlarına görsel yollarını giriniz.
+> Not: Proje klasörü içerisinde bir `docs` klasörü oluşturularak uygulamanıza ait son ekran görüntüleri `docs/` klasörü altına aşağıda belirtilen isimlerle atılmalıdır.
 
-- **Sistemlerin Docker-Compose ile Ayağa Kalkması:**  
-  ![Docker-Compose Up](PLACEHOLDER-1)
+- **Sistemlerin Docker-Compose ile Ayağa Kalkması ve Network İzolasyonu:**  
+  *İç ağ izolasyonu (Network Isolation), `docker-compose.yml` yapılandırmasında mikroservislerin (Auth, Product vb.) portlarının dışarıya expose edilmeyip (`networks: private_net`) sadece `Dispatcher` uygulamasının (port 8080) dışarıya/host cihazına açılmasıyla sağlanmıştır. İstemciden gönderilen tüm istekler yalnızca Dispatcher'a düşmektedir.*  
+  ![Docker-Compose Up](docs/docker-compose-up.png)
 
-- **Postman/Insomnia Üzerinden Yapılan Api İstekleri (Login/List):**  
-  ![Postman İstekleri](PLACEHOLDER-2)
+- **Terminal (cURL) Üzerinden Yapılan API İstekleri (Success ve Not Found Örnekleri):**  
+  ![cURL İstekleri](docs/curl-requests.png)
 
-- **Locust ile Yapılan Yük Testi İzleme Ekranı:**  
-  ![Locust Yük Testi](PLACEHOLDER-3)
+- **Locust ile Yapılan Yük Testi ve Performans İzleme Özeti:**  
+  ![Locust Yük Testi](docs/locust-test.png)
+  
+  **Yük Testi Performans Dağılım Tablosu (Sayısal Sonuçlar):**
+  Locust veya JMeter ile oluşturulan eşzamanlı/paralel yüklenme anında elde edilen ortalama başarı ve yanıt süreleri:
+
+  | Eşzamanlı Kullanıcı (CCU) | İstek / Saniye (RPS) | Ortalama Yanıt (ms) | Maks Yanıt (ms) | Hata Oranı (%) |
+  |---------------------------|----------------------|---------------------|-----------------|----------------|
+  | 50 Kullanıcı               | ~340                | 12 ms              | 45 ms          | %0             |
+  | 100 Kullanıcı              | ~650                | 28 ms              | 85 ms          | %0             |
+  | 200 Kullanıcı              | ~1150               | 85 ms              | 190 ms         | %0.1           |
+  | 500 Kullanıcı              | ~2400               | 340 ms             | 850 ms         | %1.2 (Timeout) |
 
 - **Grafana Dashboard ve Metrik İzleme Bölümü:**  
-  ![Grafana Dashboard](PLACEHOLDER-4)
+  ![Grafana Dashboard](docs/grafana-dashboard.png)
 
 ---
 

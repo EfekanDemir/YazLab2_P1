@@ -1,0 +1,42 @@
+﻿*   85e2000 (refs/stash) On efekan: !!GitHub_Desktop<efekan>
+|\  
+| * 97ef29c index on efekan: e286ef8 Merge branch 'efekan'
+|/  
+| * 258aa9c (HEAD -> efekan, origin/oktay, origin/efekan, oktay) chore: performans testi (Locust) eklendi, rapor rotalari fixlendi ve Mongoose v8 uyumlulugu saglandi
+| * 245aeb2 feat: RBAC destekli JWT dogrulama ve merkezi JWT_SECRET yapilandirmasi eklendi
+| * 503090b fix: mikroservislerin base URLleri senkronize edildi ve dispatcher body size hatasi giderildi
+| * 5533e40 fix: dispatcher rotalarindaki portlar 5002-5003 olarak guncellendi
+| * c127395 fix: dispatcher header engeli asildi ve portlar duzeltildi
+| * 950a220 fix: dockerfile icine kayip seed_redis dosyasi eklendi
+| * 2ed73dc fix: dispatcher uzerindeki kirik route yapisini yeni servislere gore (product, report) guncelledim ve auth login/registeri ayirdim
+| * 4e1d5ab fix: auth servis base URL api/v1/auth olarak g├╝ncellendi (dispatcher uyumu i├ğin)
+| * 882ebe3 fix: docker-compose'daki eski servisleri d├╝zelttim ve gereksiz klas├Ârleri temizledim
+| * 51ccba1 G├╝ncelleme README.md
+| * ba05d1b docs: README.md icerisindeki hatali mermaid diyagramlari duzeltildi
+| * 44896b5 docs: proje mimarisi ve ekip bilgilerini iceren kapsamli README eklendi
+|/  
+*   e286ef8 (origin/main, origin/HEAD, main) Merge branch 'efekan'
+|\  
+| * c5d3ebe feat: added Phase 4 Observability with Prometheus, Grafana, Loki and Locust
+* |   11fc221 Merge branch 'oktay'
+|\ \  
+| * | e58929a feat(report): map-reduce stok raporlamasi ve product servisi entegrasyonu (axios) ile report-service eklendi
+* | |   b42fd75 Merge branch 'efekan'
+|\ \ \  
+| | |/  
+| |/|   
+| * | cdebedd feat: integrated RedisRouteStore, JWT, RBAC middleware and Enrichment pipeline
+| * | ca68b34 test: added failed auth and rbac suites for Phase 3
+* | |   6322e10 Merge branch 'oktay'
+|\ \ \  
+| |/ /  
+|/| /   
+| |/    
+| * 62a2702 feat(product): crud islemleri icin product-service eklendi, auth mimarisi buraya da uyarlandi
+| * 0eb737c feat: oop ve rmm2 mimarisine uygun auth-service eklendi
+| * 2f566a3 feat: docker-compose ile mikroservis agi ve db izolasyonu eklendi
+* | 5961281 feat(Dispatcher): implemented core proxy via TDD Green Phase and refactored
+* | 31d488b test: added failed test suites for Dispatcher TDD Red Phase
+|/  
+* c23f4d8 feat(Phase 1): Infrastructure, Docker networking, API shells
+* 0e29dbd Initial commit

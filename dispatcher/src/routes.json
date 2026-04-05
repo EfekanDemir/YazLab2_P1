@@ -1,6 +1,6 @@
 {
-  "/api/v1/products": "http://product-service:3000",
+  "/api/v1/products": "http://product-service:5002",
   "/api/v1/auth/login": "http://auth-service:5001",
   "/api/v1/auth/register": "http://auth-service:5001",
-  "/api/v1/reports": "http://report-service:3000"
+  "/api/v1/reports": "http://report-service:5003"
 }

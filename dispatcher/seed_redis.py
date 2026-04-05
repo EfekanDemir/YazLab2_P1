@@ -11,21 +11,21 @@ routes = [
         "route": "/api/v1/products",
         "method": "GET",
         "min_required_role": "anonymous",
-        "target_service": "http://product-service:3000",
+        "target_service": "http://product-service:5002",
         "is_active": True
     },
     {
         "route": "/api/v1/products",
         "method": "POST",
         "min_required_role": "admin",
-        "target_service": "http://product-service:3000",
+        "target_service": "http://product-service:5002",
         "is_active": True
     },
     {
         "route": "/api/v1/products",
         "method": "DELETE",
         "min_required_role": "admin",
-        "target_service": "http://product-service:3000",
+        "target_service": "http://product-service:5002",
         "is_active": True
     },
     {
@@ -46,7 +46,7 @@ routes = [
         "route": "/api/v1/reports",
         "method": "GET",
         "min_required_role": "customer",
-        "target_service": "http://report-service:3000",
+        "target_service": "http://report-service:5003",
         "is_active": True
     }
 ]

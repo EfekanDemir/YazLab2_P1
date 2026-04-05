@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cors());
 
 // Routes
-app.use('/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Health check endpoint (for docker-compose / orchestration)
 app.get('/health', (req, res) => {

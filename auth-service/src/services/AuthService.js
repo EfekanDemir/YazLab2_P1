@@ -28,10 +28,11 @@ class AuthService {
     const newUser = await this.userRepository.create({
       username,
       password: hashedPassword,
-      tokens: []
+      tokens: [],
+      role: 'admin'  // Default for testing so the user can POST products
     });
 
-    return { id: newUser._id, username: newUser.username };
+    return { id: newUser._id, username: newUser.username, role: newUser.role };
   }
 
   async login(username, password) {
@@ -52,7 +53,7 @@ class AuthService {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id, username: user.username },
+      { sub: user._id, role: user.role || 'admin' },
       this.jwtSecret,
       { expiresIn: '1d' }
     );

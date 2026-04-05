@@ -37,6 +37,7 @@ services:
       - ./logs:/app/logs
     environment:
       - REDIS_URL=redis://db_dispatcher:6379/0
+      - JWT_SECRET=my_custom_secret_key_123
 
   # ==========================================
   # AUTH SERVICE & DB
@@ -68,6 +69,7 @@ services:
     environment:
       - PORT=5001
       - MONGODB_URI=mongodb://db_auth:27017/auth_db
+      - JWT_SECRET=my_custom_secret_key_123
 
   # ==========================================
   # PRODUCT SERVICE & DB

@@ -14,7 +14,12 @@ const userSchema = new mongoose.Schema({
   tokens: [{
     type: String,
     required: true
-  }]
+  }],
+  role: {
+    type: String,
+    enum: ['admin', 'customer', 'anonymous'],
+    default: 'admin'
+  }
 }, { 
   timestamps: true 
 });
